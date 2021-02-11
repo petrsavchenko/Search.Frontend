@@ -1,0 +1,27 @@
+interface ILoadingPositions {
+    positions: string | null,
+    loading: boolean
+}  
+
+export interface ISearchResult {
+    [searchEngine: string]: ILoadingPositions;
+}
+
+export const SearchResult = (props: ISearchResult) => {
+    const items = [];
+
+    for (const searchEngine in props) {
+        const { loading, positions } = props[searchEngine];
+        if (loading) {
+            items.push(<li key={searchEngine}><h3>Hold on, fetching data via {searchEngine}...</h3></li>)
+            continue;
+        }
+        if (!positions) {
+            items.push(<li key={searchEngine}><h2>Sorry {searchEngine} was unable to find your keywords</h2></li>);
+        } else{
+            items.push(<li key={searchEngine}><h2>your keywords was found on {positions} place/s via {searchEngine}</h2></li>);
+        }
+    }
+
+    return <ul>{items}</ul>;
+};
