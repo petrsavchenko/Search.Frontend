@@ -1,47 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { Form } from './components/Form';
 import { SearchResult, ISearchResult } from './components/Result';
+import { config } from './config';
 
 
 const App: React.FC = () => {
+  const searchResult: ISearchResult = {};
 
-  const [appState, setAppState] = useState<ISearchResult>({
-    'google': {
+  for (const engineName in config.searchApi) {
+    searchResult[engineName] = {
       positions: null,
       loading: false,
-    },
-    'bing': {
-      positions: null,
-      loading: false,
+      error: false
     }
-  });
+  }
 
-  useEffect(() => {
-    setAppState({
-      ...appState,
-      google: {
-        ...appState.google,
-        loading: true
-      }
-    });
-    const apiUrl = `api/v1/Google?keywords=bla%20bla%20car&url=https://www.blablacar.com/`;
-    fetch(apiUrl)
-      .then((res) => res.text())
-      .then((result) => {
-        setAppState({ 
-          ...appState,
-          google: {
-            positions: result,
-            loading: false
+  const [appState, setAppState] = useState<ISearchResult>(searchResult);
+
+  const onSubmit = (keywords: string, url: string) => {
+
+    for (const engineName in config.searchApi) {
+      const endpoint = config.searchApi[engineName];
+     
+      setAppState((prevAppState) => ({
+        ...prevAppState,
+        [engineName]: {
+            positions: '',
+            loading: true,
+            error: false
+        }
+      }));
+      fetch(`${endpoint}?keywords=${keywords}&url=${url}`)
+        .then((res) => {
+          if (res.ok) {
+            return res.text();
+          }
+          else {
+            setAppState((prevAppState) => ({
+              ...prevAppState,
+              [engineName]: {
+                ...prevAppState[engineName],
+                error: true
+              }
+            }));
+            return Promise.reject('server request was failed');
           }
         })
-      });
-  }, [setAppState]);
+        .then((positions) => {
+          setAppState((prevAppState) => ({
+            ...prevAppState,
+            [engineName]: {
+                ...prevAppState[engineName],
+                positions: positions,
+                loading: false,
+            }
+          }));
+        })
+    }
+  }
   return (
-    <div>
+    <div className='App'>
       <h1>Matching Results:</h1>
-      <Form />
+      <Form onSubmit={onSubmit} />
       <SearchResult {...appState} />
     </div>
   );

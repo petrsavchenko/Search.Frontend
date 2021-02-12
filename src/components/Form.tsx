@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 
-export const Form: React.FC = () => {
+export interface IForm {
+    onSubmit: (keywords: string, url: string) => void;
+}
+
+export const Form: React.FC<IForm> = ({ onSubmit }) => {
 
     const [keywords, setKeywords] = useState('');
     const [url, setUrl] = useState('');
@@ -15,6 +19,7 @@ export const Form: React.FC = () => {
 
     const submitHandler = (event: React.FormEvent) => {
       event.preventDefault();
+      onSubmit(keywords, url);
     }
 
     return (
